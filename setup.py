@@ -22,6 +22,7 @@ setuptools.setup(name='csr-summary-stats',
     ],
     python_requires='>=3.7',
     install_requires=[
+      'libpysal==4.2.2',
       'numpy==1.18.4',                                                                   
       'scipy==1.4.1',                                                                    
       'matplotlib==3.2.1',                                                               
