@@ -1,6 +1,25 @@
 # csrstat
 Package for introductory analysis of Spatial Point Processes, including basic utility functions, summary statistics and metrics for 2D point processes. To be primarily used to test the hypothesis of CSR.
 
+---
+
+## Installation
+```
+git clone https://github.com/chancehaycock/csrstat.git
+
+# Create conda environment if you don't already have one
+conda create -n my_env python==3.7
+conda install pytest
+cd csrstat
+pip install .
+```
+Check installation with
+```
+pytest test/
+```
+
+---
+
 ## Included Summary Statistics
 These functions calculate the associated metric of an observed Point Process `PP`. When `restrict_domain` is a valid argument, the metric is calculated on a subset of the original domain, in a first attempt to account for edge effects.
 
