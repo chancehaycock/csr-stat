@@ -175,8 +175,6 @@ def pandas2points(df: pd.DataFrame, x_label: str, y_label: str, marks_label: str
 		Array of Point objects 
 	"""
 
-	df = df[x_label, y_label, marks_label]
-	df = df.drop_na()
 	x = df[x_label].to_numpy()
 	y = df[y_label].to_numpy()
 
@@ -185,12 +183,14 @@ def pandas2points(df: pd.DataFrame, x_label: str, y_label: str, marks_label: str
 		return
 
 	points = []
-	for i in range(len(x)):
-		points.append(Point(x[i], y[i]))
-
 	if marks_label is not None:
 		marks = df[marks_label].to_numpy()
-		return points, marks
+		for i in range(len(x)):
+			points.append(Point(x[i], y[i], marks[i]))
+		
+	else:
+		for i in range(len(x)):
+			points.append(Point(x[i], y[i]))
 
 	return points
 
