@@ -122,7 +122,7 @@ def F_hat(PP: Type[Point_Process], r:np.ndarray, num_sampled_points:int = 1000, 
 
 	return np.array(F_hat)
 
-def K_hat(PP:Type[Point_Process], r:np.ndarray, restrict_domain:bool = True, plot:bool = False) -> np.ndarray:
+def K_hat(PP:Type[Point_Process], r:np.ndarray, restrict_domain:bool = False, plot:bool = False) -> np.ndarray:
 
 	"""Calculates and plots an estimate of the K(r) over a range of distances.
 
@@ -177,7 +177,7 @@ def K_hat(PP:Type[Point_Process], r:np.ndarray, restrict_domain:bool = True, plo
 	return np.array(K_hat)
 
 
-def L_hat(PP: Type[Point_Process], r:np.ndarray, restrict_domain:bool = True, plot:bool = False)-> np.ndarray:
+def L_hat(PP: Type[Point_Process], r:np.ndarray, restrict_domain:bool = False, plot:bool = False)-> np.ndarray:
 
 	"""Calculates and plots an estimate of the L(r) over a range of distances.
 	Note here, under CSR, L is the zero function.
@@ -206,7 +206,8 @@ def L_hat(PP: Type[Point_Process], r:np.ndarray, restrict_domain:bool = True, pl
 		plt.ylabel('L(r)')
 	return np.array(L_hat)
 
-def O_hat(PP: Type[Point_Process], r:np.ndarray, bandwidth:float=0.1, restrict_domain:bool=True, kernel:str="BK", plot:bool=False)-> np.ndarray:
+def O_hat(PP: Type[Point_Process], r:np.ndarray, bandwidth:float=0.1, restrict_domain:bool=False,
+          kernel:str="BK", plot:bool=False)-> np.ndarray:
 
 	"""Calculates and plots an estimate of the O(r) over a range of distances.
 		Options for kernel and edge effects.
@@ -272,7 +273,8 @@ def O_hat(PP: Type[Point_Process], r:np.ndarray, bandwidth:float=0.1, restrict_d
 		plt.ylabel('O(r)')
 	return np.array(O_hat)
 
-def PC_hat(PP: Type[Point_Process], r:np.ndarray, bandwidth:float=0.1, restrict_domain:bool=True, kernel:str="BK", plot:bool=False)-> np.ndarray:
+def PC_hat(PP: Type[Point_Process], r:np.ndarray, bandwidth:float=0.1, restrict_domain:bool=False,
+           kernel:str="BK", plot:bool=False)-> np.ndarray:
 
 	"""Calculates and plots an estimate of the PCF(r) over a range of distances.
 	Options for kernels include  and edge effects
@@ -302,7 +304,8 @@ def PC_hat(PP: Type[Point_Process], r:np.ndarray, bandwidth:float=0.1, restrict_
 		plt.ylabel('PC(r)')
 	return np.array(PC_hat)
 
-def J_hat(PP: Type[Point_Process], r:np.ndarray, num_F_sampled_points:int=1000, plot:bool=False)-> np.ndarray:
+def J_hat(PP: Type[Point_Process], r:np.ndarray, num_F_sampled_points:int=1000, 
+          plot:bool=False)-> np.ndarray:
 
 	"""Calculates and plots an estimate of the J(r) over a range of distances
 	such that F(r) < 1. 
@@ -451,7 +454,8 @@ def CSR_hypothesis_test_dmin(observed_PP, significance_level:float, n_sim:int=50
 
 	return
 
-def simulate_summary_statistic(PP: Type[Point_Process], r:np.ndarray, summary_func:object, n_sims:int=100, plot:bool=False)->tuple:
+def simulate_summary_statistic(PP: Type[Point_Process], r:np.ndarray, summary_func:object,
+                               n_sims:int=100, plot:bool=False)->tuple:
 
 	"""Compares metrics between a given point process, and an average of n_sims homogenous 
 	poisson point processes. Returns the max and mean difference between the two. 
