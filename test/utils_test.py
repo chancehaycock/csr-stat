@@ -1,6 +1,6 @@
 # Contains all tests for functions declared in src/point_process_utils.py
 # ======================================================================
-from csrstat.point_process_utils import Point, Point_Process
+from csrstat.utils import Point, Point_Process
 import pytest
 
 # Point Class Tests

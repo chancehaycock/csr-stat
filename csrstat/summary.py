@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy as sp
 import seaborn as sbn
-from csrstat.point_process_utils import Point_Process, Point, hom_poisspp
+from csrstat.utils import Point_Process, Point, hom_poisspp
 from typing import Any, List, Type
 
 
