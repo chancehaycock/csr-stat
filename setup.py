@@ -3,13 +3,13 @@ import setuptools
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setuptools.setup(name='csr-summary-stats',
+setuptools.setup(name='csrstat',
     version='0.1',
     description='Package for introductory analysis of Spatial Point Processes,\
                  including basic utility functions, summary statistics and\
                  metrics for 2D point processes. To be primarily used to\
                  test the hypothesis of CSR.',
-    url='https://github.com/chancehaycock/csr-summary-stats',
+    url='https://github.com/chancehaycock/csrstat',
     long_description=long_description,
     long_description_content_type="text/markdown",
     author='Chance Haycock, Edward Thorpe-Woods',
