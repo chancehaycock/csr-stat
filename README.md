@@ -9,6 +9,7 @@ git clone https://github.com/chancehaycock/csrstat.git
 
 # Create conda environment if you don't already have one
 conda create -n my_env python==3.7
+conda activate my_env
 conda install pytest
 cd csrstat
 pip install .
