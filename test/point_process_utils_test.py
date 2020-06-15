@@ -1,6 +1,6 @@
 # Contains all tests for functions declared in src/point_process_utils.py
 # ======================================================================
-from point_process_utils import Point, Point_Process
+from csrstat.point_process_utils import Point, Point_Process
 import pytest
 
 # Point Class Tests
@@ -62,7 +62,7 @@ def test_pp4(pp):
 # Example G Summary Statistic Test
 from pointpats import PointPattern, G
 import numpy as np
-from summary_statistics import G_hat
+from csrstat.summary_statistics import G_hat
 
 @pytest.fixture
 def pysal_pp():
