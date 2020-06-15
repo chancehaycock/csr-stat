@@ -83,13 +83,35 @@ class Point_Process:
 		     * (self.window['y_max'] - self.window['y_min'])
 
 	def display(self, marker_size: float = 10.0):
-		sbn.scatterplot(self.x, self.y, alpha=0.7, s=marker_size)
+		sbn.scatterplot(self.x, self.y, size=self.marks, alpha=0.7, s=marker_size)
 		plt.xlabel('x')
 		plt.ylabel('y')
 		plt.show()
 
-	def intensity_map(self, bandwidth: float = 0.1):
-		return
+	def intensity_map(self, partitions: int = 100, bandwidth: float = 1, display = True)-> np.ndarray:
+		inc_x=np.linspace(self.window["x_min"], self.window["x_max"], partitions)
+		inc_y=np.linspace(self.window["y_min"], self.window["y_max"], partitions)
+		gridspace_area=(self.area()/(partitions*partitions))
+		x=[]
+		y=[]
+		for i in range(0, self.num_points):
+			for _ in range(0, self.marks[i]):
+				x.append(self.x[i])
+				y.append(self.y[i])
+
+		smooth=sp.ndimage.gaussian_filter(np.flip(np.histogram2d(y, x, [inc_y, inc_x])[0], 0)/gridspace_area, bandwidth)
+
+		if(display):
+			sbn.heatmap(smooth, xticklabels=False, yticklabels=False)
+
+		return smooth
+
+	def possion_num_mark(self, mean_num):
+
+		for i in range(0,self.num_points):
+			self.marks[i]=np.random.poisson(mean_num)
+
+
 	
 	# Return summary stats for PP
 	def summary(self):
@@ -151,9 +173,22 @@ def hom_poisspp(intensity: float, window: dict, factor_marks: bool = False)->Typ
 def thinningpp(PP):
 	return
 
-# Generate an inhomogenoues point process, option for marks. Use thinning.
-def inhom_poisspp(intensity_function, window: dict, factor_marks: bool = False):
-	return
+# Generate an inhomogenous point process, option for marks. Use thinning based on accept reject
+def inhom_poisspp(intensity_surface: np.ndarray, window: dict, factor_marks: bool = False)->Type[Point_Process]:
+	points=[]
+
+	P=intensity_surface/intensity_surface.max() #create a probability surface by dividing all points by the maximum of intensity sufaces
+	homPP = hom_poisspp(intensity_surface.max(), window) #create a homogenous point process intensity equal to maximum from intensity surface
+
+	for p in range(0, homPP.num_points): #loop through all points in the point process
+		gridx=int(homPP.x[p]*(window["x_min"]+(len(P)/(window["x_max"]-window["x_min"])))) #convert x & y to grid locations of the 
+		gridy=int(homPP.y[p]*(window["y_max"]-(len(P)/(window["y_max"]-window["y_min"])))) # intensity or probability surface
+		
+		bool_accept = np.random.uniform(0,1)<=P[gridy][gridx] #generate random number, if below probability then accept- otherwise reject
+		if(bool_accept):
+			points=np.append(points, Point(homPP.x[p], homPP.y[p]))
+		
+	return(Point_Process(points, window))
 
 # Generate Point process from data at filename
 def scanpp(filename: str, window: dict, marks: bool=False):
@@ -168,13 +203,13 @@ def pandas2points(df: pd.DataFrame, x_label: str, y_label: str, marks_label: str
 		df (pandas Dataframe): Input data
 		x_label (str): Name of the column in df associated to x co-ords
 		y_label (str): Name of the column in df associated to y co-ords
-		marks_label (str): [Inactive] Name of the column in df associated
+		marks_label (str): Name of the column in df associated
 		                   to the mark values of a (x, y) co-ord
 
 	Returns:
 		Array of Point objects 
 	"""
-
+	df = df.dropna()
 	x = df[x_label].to_numpy()
 	y = df[y_label].to_numpy()
 
@@ -187,7 +222,6 @@ def pandas2points(df: pd.DataFrame, x_label: str, y_label: str, marks_label: str
 		marks = df[marks_label].to_numpy()
 		for i in range(len(x)):
 			points.append(Point(x[i], y[i], marks[i]))
-		
 	else:
 		for i in range(len(x)):
 			points.append(Point(x[i], y[i]))
