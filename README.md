@@ -47,4 +47,4 @@ Any of the above summary statistic functions can be simulated by calling the fol
 `CSR_hypothesis_test_dmin(observed_PP, significance_level, n_sim=500, plot_dist=False)`
 
 ## Testing
-`pytest test/point_process_utils_test.py`
+`pytest test/utils_test.py`
