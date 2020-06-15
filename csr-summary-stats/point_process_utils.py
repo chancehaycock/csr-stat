@@ -82,8 +82,8 @@ class Point_Process:
 		return (self.window['x_max'] - self.window['x_min'])\
 		     * (self.window['y_max'] - self.window['y_min'])
 
-	def display(self):
-		sbn.scatterplot(self.x, self.y, alpha=0.7, s=15.0)
+	def display(self, marker_size: float = 10.0):
+		sbn.scatterplot(self.x, self.y, alpha=0.7, s=marker_size)
 		plt.xlabel('x')
 		plt.ylabel('y')
 		plt.show()
