@@ -62,7 +62,7 @@ def test_pp4(pp):
 # Example G Summary Statistic Test
 from pointpats import PointPattern, G
 import numpy as np
-from csrstat.summary_statistics import G_hat
+from csrstat.summary import G_hat
 
 @pytest.fixture
 def pysal_pp():
