@@ -87,11 +87,11 @@ class Point_Process:
 		d_matrix=[]
 		for i in range(0, self.num_points):
 			d=[]
-			for j in range(0, self.num_points):
+			for j in range(0, i):
 				d=np.append(d, np.sqrt((self.x[j]-self.x[i])**2+(self.y[j]-self.y[i])**2))
 				
 			d_matrix.append(d)
-			
+
 		self.distance_matrix = d_matrix
 
 	def display(self, marker_size: float = 10.0):
