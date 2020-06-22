@@ -3,3 +3,4 @@
 .ipynb_*
 __pycache__*
 dataframe_check.ipynb
+.pylintrc
