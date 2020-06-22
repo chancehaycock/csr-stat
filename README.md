@@ -30,13 +30,20 @@ These functions calculate the associated metric of an observed Point Process `PP
 
 `J_hat(PP, r, num_F_sampled_points=1000, plot=False)`
 
-`K_hat(PP, r, restrict_domain=True, plot=False)`
+`K_hat(PP, r, restrict_domain=False, plot=False)`
 
-`L_hat(PP, r, restrict_domain=True, plot=False)`
+`L_hat(PP, r, restrict_domain=False, plot=False)`
 
-`O_hat(PP, r, bandwidth=0.1, restrict_domain=True, kernel="BK", plot=False)`
+`O_hat(PP, r, bandwidth=0.1, restrict_domain=False, kernel="BK", plot=False)`
 
-`PC_hat(PP, r, bandwidth=0.1, restrict_domain=True, kernel="BK", plot=False)`
+`PC_hat(PP, r, bandwidth=0.1, restrict_domain=False, kernel="BK", plot=False)`
+
+### Additional Fast Functions
+Good for simulation inference.
+
+`K_hat_fast(PP, r, plot=False)`
+
+`L_hat_fast(PP, r, plot=False)`
 
 ## Simulation
 Any of the above summary statistic functions can be simulated by calling the following. Resulting max/min envelopes will then be plotted and can be compared against a given realisation. Currently, only the default arguments of a summary statistic function can be used during simulation.
