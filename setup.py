@@ -29,5 +29,6 @@ setuptools.setup(name='csrstat',
       'pytest==5.4.3',                                                                   
       'pandas==1.0.4',                                                                
       'seaborn==0.10.1',
+      'utm==0.5.0'
     ] 
 )
