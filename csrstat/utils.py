@@ -51,6 +51,7 @@ class Point_Process:
 		self.x = np.array([p.x for p in points])
 		self.y = np.array([p.y for p in points])
 		self.marks = np.array([p.mark for p in points])
+		self.distance_matrix = None
 
 		# If no window argument passed, 'guess' it from the data
 		if (window is None):
@@ -68,6 +69,17 @@ class Point_Process:
 	def area(self)->float:
 		return (self.window['x_max'] - self.window['x_min'])\
 		     * (self.window['y_max'] - self.window['y_min'])
+	
+	def distance_matrix_init(self):
+		d_matrix=[]
+		for i in range(0, self.num_points):
+			d=[]
+			for j in range(0, i):
+				d=np.append(d, np.sqrt((self.x[j]-self.x[i])**2+(self.y[j]-self.y[i])**2))
+				
+			d_matrix.append(d)
+
+		self.distance_matrix = d_matrix
 
 	def display(self, marker_size: float = 10.0):
 		sbn.scatterplot(self.x, self.y, size=self.marks, alpha=0.7, s=marker_size)
