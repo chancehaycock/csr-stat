@@ -1,16 +1,17 @@
-import matplotlib.pyplot as plt
-import numpy as np
-import scipy as sp
-import seaborn as sbn
 from csrstat.utils import Point_Process, Point, hom_poisspp
 from typing import Any, List, Type
-
-
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy as sp
+import seaborn as sbn
+sbn.set()
 
 def min_neighbour_dists(PP: Type[Point_Process]) -> np.ndarray :
 
-	"""Calculates the nearest neighbour distance to each of the N samples PP. 
-	Returns nearest neighbour distances as a np.array of floats of length N.
+	"""Calculates the nearest neighbour distance of each of the N events of 
+	the point process PP. Returns nearest neighbour distances as a np.array
+	of floats of length N.
 	Args:
 		PP: a point process object
 	Returns: 
@@ -23,15 +24,17 @@ def min_neighbour_dists(PP: Type[Point_Process]) -> np.ndarray :
 			d=np.sqrt((PP.x[j] - PP.x[i])**2 + (PP.y[j] - PP.y[i])**2)
 			if ((d<d_min) and (i!=j)):
 				d_min=d
-                
-		minimum_distances=np.append(minimum_distances, d_min)
-        
-	return minimum_distances
+
+		minimum_distances.append(d_min)
+
+	return np.array(minimum_distances)
+
 
 def min_empty_space_dists(PP: Type[Point_Process], num_sampled_points:int)-> np.ndarray:
 
-	"""Calculates the nearest neighbour distance to each of the N samples PP. 
-	Returns nearest neighbour distances as a np.array of floats of length N.
+	"""Calculates the nearest neighbour distance to each of the `num_sampled_points`
+	points in the domain of the point process, PP. Returns nearest neighbour distances 
+	as a np.array of floats of length N.
 	Args:
 		PP: a point process object
 	Returns: 
@@ -46,23 +49,23 @@ def min_empty_space_dists(PP: Type[Point_Process], num_sampled_points:int)-> np.
 			d=np.sqrt((PP.x[j] - x)**2 + (PP.y[j] - y)**2)
 			if ((d<d_min) and (i!=j)):
 				d_min=d
-                
-		empty_space_distances=np.append(empty_space_distances, d_min)
-        
-	return empty_space_distances
+
+		empty_space_distances.append(d_min)
+
+	return np.array(empty_space_distances)
 
 
+def G_hat(PP: Type[Point_Process], r:np.ndarray, plot:bool=False)-> pd.DataFrame:
 
-def G_hat(PP: Type[Point_Process], r:np.ndarray, plot:bool=False)-> np.ndarray:
+	"""Calculates an estimate of the nearest neighbour summary statistic, G(r)
+	over a range of distances, r, specified by the user.
 
-	"""Calculatesan estimate of the G(r) over a range of distances.
-     
 	Args:
 		PP: a point process object
 		r: an np array of input values
-        plot: default False, True to see plots of G(r) 
-	Returns: 
-		G(r) as np.ndarray of floats"""
+		plot: default False, True to see plots of G(r) 
+	Returns:
+		pd.DataFrame of floats with columns ['r', 'G_hat', 'csr']"""
 
 	minimum_distances=min_neighbour_dists(PP)
 	intensity=PP.homo_intensity_estimate()
@@ -75,31 +78,35 @@ def G_hat(PP: Type[Point_Process], r:np.ndarray, plot:bool=False)-> np.ndarray:
 			if dist <= r_in:
 				count += 1
 		G_hat.append(count/total_num_points)
-    
+
+	df = pd.DataFrame(data=np.column_stack((r, G_hat, expected)), 
+	                  columns=['r', 'G_hat', 'csr'])
 
 	if(plot):
-		sbn.scatterplot(r, G_hat, alpha=0.75, label='Observed G')
-		plt.plot(r, expected, c='k', label='Expected G', alpha=0.6)
-		plt.legend()
-    
+		sbn.scatterplot(data=df, x='r', y='G_hat', alpha=0.75, label='Observed G')
+		sbn.lineplot(data=df, x='r', y='csr', alpha=0.75, label='CSR G', color='k')
 		plt.xlabel('r')
 		plt.ylabel('G(r)')
+		plt.show()
 
-	return np.array(G_hat)
+	return df
 
 
+def F_hat(PP: Type[Point_Process], r:np.ndarray, num_sampled_points:int = 1000,
+          plot:bool =False) -> pd.DataFrame:
 
-def F_hat(PP: Type[Point_Process], r:np.ndarray, num_sampled_points:int = 1000, plot:bool =False) -> np.ndarray:
+	"""Calculates and plots an estimate of the  empty space summary statistics,
+	F(r) over a range of distances, r, specified by the user. Uniformly samples 
+	`num_sampled_points` in the domain to estimate.
 
-	"""Calculates and plots an estimate of the F(r) over a range of distances.
-     
 	Args:
 		PP: a point process object
 		r: an np array of input values
-        num_sampled_points: default 1000, number of random points used to determine F
-        plot: default False, True to see plots of F(r)
+		num_sampled_points: default 1000, number of random points used to 
+		                    determine F
+		plot: default False, True to see plots of F(r)
 	Returns: 
-		F(r) as np.ndarray of floats"""
+		pd.DataFrame of floats with columns ['r', 'F_hat', 'csr']"""
 
 	minimum_distances = min_empty_space_dists(PP, num_sampled_points)
 	intensity = PP.homo_intensity_estimate()
@@ -111,28 +118,32 @@ def F_hat(PP: Type[Point_Process], r:np.ndarray, num_sampled_points:int = 1000, 
 			if dist <= r_in:
 				count += 1
 		F_hat.append(count/num_sampled_points)
-   
+
+	df = pd.DataFrame(data=np.column_stack((r, F_hat, expected)),
+	                  columns=['r', 'F_hat', 'csr'])
+
 	if(plot):
-		sbn.scatterplot(r, F_hat, alpha=0.75, label='Observed F')
-		plt.plot(r, expected, c='k', label='Expected F', alpha=0.6)
-		plt.legend()
-    
+		sbn.scatterplot(data=df, x='r', y='F_hat', alpha=0.75, label='Observed F')
+		sbn.lineplot(data=df, x='r', y='csr', alpha=0.75, label='CSR F', color='k')
 		plt.xlabel('r')
 		plt.ylabel('F(r)')
+		plt.show()
 
-	return np.array(F_hat)
+	return df
 
-def K_hat(PP:Type[Point_Process], r:np.ndarray, restrict_domain:bool = False, plot:bool = False) -> np.ndarray:
+def K_hat(PP:Type[Point_Process], r:np.ndarray, restrict_domain:bool = False, 
+          plot:bool = False) -> pd.DataFrame:
 
-	"""Calculates and plots an estimate of the K(r) over a range of distances.
+	"""Calculates and plots an estimate of the homogeneous Ripley K function, K(r), 
+	over a range of distances specified by the user.
 
 	Args:
 		PP: a point process object
 		r: an np array of input values
-		restrict_domain: default True, restricting the domain to counter edge effect
+		restrict_domain: default False, restricting the domain to counter edge effects.
 		plot: default False, True to see plots of K(r)
 	Returns: 
-		K(r) as np.ndarray of floats"""
+		pd.DataFrame of floats with columns ['r', 'K_hat', 'csr']"""	
 
 	intensity=PP.homo_intensity_estimate()
 	expected = np.pi*r**2
@@ -166,62 +177,193 @@ def K_hat(PP:Type[Point_Process], r:np.ndarray, restrict_domain:bool = False, pl
 						count+=1            
 		K_hat.append(count/(n*intensity))
 
-	if(plot):
-		sbn.scatterplot(r, K_hat, alpha=0.75, label='Observed K')
-		plt.plot(r, expected, c='k', label='Expected K', alpha=0.6)
-		plt.legend()
+	df = pd.DataFrame(data=np.column_stack((r, K_hat, expected)),
+	                  columns=['r', 'K_hat', 'csr'])
 
+	if(plot):
+		sbn.scatterplot(data=df, x='r', y='K_hat', alpha=0.75, label='Observed K')
+		sbn.lineplot(data=df, x='r', y='csr', alpha=0.75, label='CSR K', color='k')
 		plt.xlabel('r')
 		plt.ylabel('K(r)')
+		plt.show()
 
-	return np.array(K_hat)
+	return df
 
 
-def L_hat(PP: Type[Point_Process], r:np.ndarray, restrict_domain:bool = False, plot:bool = False)-> np.ndarray:
+def K_hat_fast(PP:Type[Point_Process], r:np.ndarray, plot:bool = False) -> pd.DataFrame:
 
-	"""Calculates and plots an estimate of the L(r) over a range of distances.
-	Note here, under CSR, L is the zero function.
-     
+	"""Calculates and plots an estimate of the homogeneous Ripley K function, K(r), 
+	over a range of distances specified by the user. Recommended for simulation
+	inference. No accounting for edge effects. 
+
 	Args:
 		PP: a point process object
 		r: an np array of input values
-        restrict_domain: default True, restricting the domain to counter edge effect
-        plot: default False, True to see plots of L(r)
+		plot: default False, True to see plots of K(r)
 	Returns: 
-		L(r) as np.ndarray of floats"""
+		pd.DataFrame of floats with columns ['r', 'K_hat', 'csr']"""	
+
+	# Estimate Intensity of the PP
+	# intensity = PP.homo_intensity_estimate()
+	expected = np.pi*r**2
+	N = PP.num_points
+	intensity = PP.homo_intensity_estimate()
+	assert N > 0
+	# Ripley K scale factor outside of sum computer once
+	scale_factor = 1 / (N * intensity)
+
+
+	counts=[] # count[i] is number of points within radius r_i
+
+	# First collect array of all point to point distances. We only
+	# store (N^2 - N) / 2 elements compared to the full N^2 matrix
+	dists = []
+
+	# This could be brought in as a separate 'warm-start' function
+	# for K, L, O, PC. No need to compute everytime.
+	for i in range(0, N):
+		for j in range(i+1, N):
+			dists.append(np.sqrt((PP.x[j]-PP.x[i])**2 + (PP.y[j]-PP.y[i])**2))
+
+	# Cumalative count of points.
+	count = 0
+	for r_in in r:
+		# If r is large enough s.t. all distances have been
+		# deleted, no need to check. Just append the current
+		# count.
+		if len(dists) == 0:
+			counts.append(count)
+			continue
+
+		# Find elements of array which represent points
+		# within distance r_in. We will delete these elements
+		# in order to reduce the number of points to check
+		# in the next iteration.
+		delete = np.where(dists <= r_in)
+
+		# How many points were found within distance r_in
+		num_deletes = len(delete[0])
+
+		# Quick fail statement
+		if num_deletes == 0:
+			counts.append(count)
+			continue
+
+		# Remove the discovered points from the array and accumulate
+		# the count. i.e. a point within distance r_in=4 is known to
+		# be within a distance r_in <=5.
+		dists = np.delete(dists, delete)
+
+		# Add double the amount of points found to the count accounting
+		# for each pair of points.
+		count += 2 * num_deletes
+		counts.append(count)
+
+	# Finally convert to numpy array rather than use np.append, and scale
+	# appropiately.
+	K_hat = np.array(counts) * scale_factor
+
+	df = pd.DataFrame(data=np.column_stack((r, K_hat, expected)),
+	                  columns=['r', 'K_hat', 'csr'])
+
+	# Usual option to plot.
+	if(plot):
+		sbn.scatterplot(data=df, x='r', y='K_hat', alpha=0.75, label='Observed K')
+		sbn.lineplot(data=df, x='r', y='csr', alpha=0.75, label='CSR K', color='k')
+		plt.xlabel('r')
+		plt.ylabel('K(r)')
+		plt.show()
+
+	return df
+
+
+def L_hat(PP: Type[Point_Process], r:np.ndarray, restrict_domain:bool = False,
+          plot:bool = False)-> pd.DataFrame:
+
+	"""Calculates and plots an estimate of the NORMALISED homogeneous Ripley K 
+	function, L(r), over a range of distances specified by the user.
+
+	Args:
+		PP: a point process object
+		r: an np array of input values
+		restrict_domain: default False, restricting the domain to counter edge 
+		                 effects.
+		plot: default False, True to see plots of L(r)
+	Returns: 
+		pd.DataFrame of floats with columns ['r', 'L_hat', 'csr']"""	
 
 	# Call Ripley K
-	K = K_hat(PP, r, restrict_domain=restrict_domain, plot=False)
+	K = K_hat(PP, r, restrict_domain=restrict_domain, plot=False).K_hat.to_numpy()
 
 	# Normalise as per definition of L
 	L_hat = np.sqrt(K / np.pi) - r
+	expected = np.zeros(len(r))
 
-	# Option to Plot
+	df = pd.DataFrame(data=np.column_stack((r, L_hat, expected)),
+	                  columns=['r', 'L_hat', 'csr'])
+
+	# Option to plot.
 	if(plot):
-		sbn.scatterplot(r, L_hat, alpha=0.75, label='Observed L')
-		plt.plot(r, np.zeros(len(r)), c='k', label='Expected L', alpha=0.6)
-		plt.legend()
-
+		sbn.scatterplot(data=df, x='r', y='L_hat', alpha=0.75, label='Observed L')
+		sbn.lineplot(data=df, x='r', y='csr', alpha=0.75, label='CSR L', color='k')
 		plt.xlabel('r')
 		plt.ylabel('L(r)')
-	return np.array(L_hat)
+		plt.show()
 
-def O_hat(PP: Type[Point_Process], r:np.ndarray, bandwidth:float=0.1, restrict_domain:bool=False,
-          kernel:str="BK", plot:bool=False)-> np.ndarray:
+	return df
 
-	"""Calculates and plots an estimate of the O(r) over a range of distances.
-		Options for kernel and edge effects.
+
+def L_hat_fast(PP:Type[Point_Process], r:np.ndarray, plot:bool = False) -> pd.DataFrame:
+
+	"""Calculates and plots an estimate of the NORMALISED homogeneous Ripley K
+	function, L(r), over a range of distances specified by the user. Recommended
+	for simulation inference. No accounting for edge effects. 
+
+	Args:
+		PP: a point process object
+		r: an np array of input values
+		plot: default False, True to see plots of L(r)
+	Returns: 
+		pd.DataFrame of floats with columns ['r', 'L_hat', 'csr']"""	
+
+	# Call Ripley K
+	K = K_hat_fast(PP, r, plot=False).K_hat.to_numpy()
+
+	# Normalise as per definition of L
+	L_hat = np.sqrt(K / np.pi) - r
+	expected = np.zeros(len(r))
+
+	df = pd.DataFrame(data=np.column_stack((r, L_hat, expected)),
+	                  columns=['r', 'L_hat', 'csr'])
+
+	# Option to plot.
+	if(plot):
+		sbn.scatterplot(data=df, x='r', y='L_hat', alpha=0.75, label='Observed L')
+		sbn.lineplot(data=df, x='r', y='csr', alpha=0.75, label='CSR L', color='k')
+		plt.xlabel('r')
+		plt.ylabel('L(r)')
+		plt.show()
+
+	return df
+
+
+def O_hat(PP: Type[Point_Process], r:np.ndarray, bandwidth:float=0.1, 
+          restrict_domain:bool=False, kernel:str="BK", plot:bool=False)-> pd.DataFrame:
+
+	"""Calculates and plots an estimate of the O Ring function, O(r) over a range
+	of distances specified by the user. Includes options for kernel-smoothing
+	choice and whether to account for edge effects.
 
 	Args:
 		PP: a point process object
 		r: an np array of input values 
-		bandwidth : float determining the bandwidth of ring
-		restrict_domain: if False edge effects will be ignored, default True
+		bandwidth : float determining the kernel bandwidth of ring
+		restrict_domain: if False edge effects will be ignored, default False
 		kernel: kernel for O_hat. Default is "BK" for box kernel, which is a 
 		flat count. Option of "EK" for Epanechnikov kernel, a quadratic count 
 		which favour points closer to center of ring.
 	Returns: 
-		O(r) as np.ndarray of floats"""
+		pd.DataFrame of floats with columns ['r', 'O_hat', 'csr']"""
 
 	intensity=PP.homo_intensity_estimate()
 	O_hat=[]
@@ -262,75 +404,87 @@ def O_hat(PP: Type[Point_Process], r:np.ndarray, bandwidth:float=0.1, restrict_d
 			
 		O_hat.append(count/(2*np.pi*r_in*n))
 
+	expected = intensity * np.ones(len(r))
+	df = pd.DataFrame(data=np.column_stack((r, O_hat, expected)),
+	                  columns=['r', 'O_hat', 'csr'])
 
+	# Option to plot.
 	if(plot):
-
-		sbn.scatterplot(r, O_hat, alpha=0.75, label='Observed O(r)')
-		plt.plot(r, intensity*np.ones(len(r)), c='k', label='Expected O(r)', alpha=0.6)
-		plt.legend()
-
+		sbn.scatterplot(data=df, x='r', y='O_hat', alpha=0.75, label='Observed O')
+		sbn.lineplot(data=df, x='r', y='csr', alpha=0.75, label='CSR O', color='k')
 		plt.xlabel('r')
 		plt.ylabel('O(r)')
-	return np.array(O_hat)
+		plt.show()
 
-def PC_hat(PP: Type[Point_Process], r:np.ndarray, bandwidth:float=0.1, restrict_domain:bool=False,
-           kernel:str="BK", plot:bool=False)-> np.ndarray:
+	return df
 
-	"""Calculates and plots an estimate of the PCF(r) over a range of distances.
-	Options for kernels include  and edge effects
+
+def PC_hat(PP: Type[Point_Process], r:np.ndarray, bandwidth:float=0.1,
+           restrict_domain:bool=False, kernel:str="BK", plot:bool=False)-> pd.DataFrame:
+
+	"""Calculates and plots an estimate of the Pair Correlation function, PC(r) 
+	over a range of distances specified by the user. Includes options for kernel
+	-smoothing choice and whether to account for edge effects.
 		
 	Args:
 		PP: a point process object
 		r: an np array of input values
 		bandwidth : float determining the bandwidth of ring
-		restrict_domain: if False edge effects will be ignored, default True
+		restrict_domain: if False edge effects will be ignored, default False
 		kernel: kernel for O_hat. Default is "BK" for box kernel, which is a 
 		flat count. Option of "EK" for Epanechnikov kernel, a quadratic count 
 		which favour points closer to center of ring.
 	Returns: 
-		PCF(r) as np.ndarray of floats"""
+		pd.DataFrame of floats with columns ['r', 'PC_hat', 'csr']"""
 
 	intensity=PP.homo_intensity_estimate()
-	O=O_hat(PP, r, bandwidth=bandwidth, restrict_domain=restrict_domain, kernel=kernel)
+	O=O_hat(PP, r, bandwidth=bandwidth, restrict_domain=restrict_domain,
+	        kernel=kernel).O_hat.to_numpy()
 	PC_hat=O/intensity
 
+	expected = np.ones(len(r))
+
+	df = pd.DataFrame(data=np.column_stack((r, PC_hat, expected)),
+	                  columns=['r', 'PC_hat', 'csr'])
+
+	# Option to plot.
 	if(plot):
-
-		sbn.scatterplot(r, PC_hat, alpha=0.75, label='Observed PC(r)')
-		plt.plot(r, np.ones(len(r)), c='k', label='Expected PC(r)', alpha=0.6)
-		plt.legend()
-
+		sbn.scatterplot(data=df, x='r', y='PC_hat', alpha=0.75, label='Observed PC')
+		sbn.lineplot(data=df, x='r', y='csr', alpha=0.75, label='CSR PC', color='k')
 		plt.xlabel('r')
 		plt.ylabel('PC(r)')
-	return np.array(PC_hat)
+		plt.show()
+
+	return df
+
 
 def J_hat(PP: Type[Point_Process], r:np.ndarray, num_F_sampled_points:int=1000, 
-          plot:bool=False)-> np.ndarray:
+          plot:bool=False)-> pd.DataFrame:
 
 	"""Calculates and plots an estimate of the J(r) over a range of distances
 	such that F(r) < 1. 
 
 	                   J(r) := (1 - G(r)) / (1 - F(r))
 
-	Returns J(r) as a np.ndarray of length len(r). As the function is only defined
-	for values of r such that F(r) < 1, the returned array consists of
+	As the function is only defined for values of r such that F(r) < 1, 
+	the returned J_hat series consists of
 
 	         [ {J(r) : r satisfies F(r) < 1} + {array of np.nans} ]
 
 	Note here, under CSR, J is the constant function of value one. As the function 
 	is comprised of a quotient of F and G, any edge effects should cancel out.
-     
+
 	Args:
 		PP: a point process object
 		r: an np array of input values
 		num_F_sampled_points: number of sampled points in the domain used to 
 		                      estimate the empty space function, F.
-        plot: default False, True to see plots of J(r)
+		plot: default False, True to see plots of J(r)
 	Returns: 
-		J(r) as np.ndarray"""
+		pd.DataFrame of floats with columns ['r', 'J_hat', 'csr']"""
 
-	F = F_hat(PP, r, num_sampled_points=num_F_sampled_points, plot=False)
-	G = G_hat(PP, r, plot=False)
+	F = F_hat(PP, r, num_sampled_points=num_F_sampled_points, plot=False).F_hat.to_numpy()
+	G = G_hat(PP, r, plot=False).G_hat.to_numpy()
 
 	# Max value of F function
 	F_max = np.max(F)
@@ -345,7 +499,13 @@ def J_hat(PP: Type[Point_Process], r:np.ndarray, num_F_sampled_points:int=1000,
 
 	# Create array of nans to be concatenated with J_hat to ensure
 	# the returned J_hat array has the same length as input array r.
+	expected = np.ones(max_index)
 	nan_buffer = np.full(len(r) - len(J_hat), np.nan)
+	J_hat = np.concatenate((J_hat, nan_buffer))
+	expected = np.concatenate((expected, nan_buffer))
+
+	df = pd.DataFrame(data=np.column_stack((r, J_hat, expected)),
+	                  columns=['r', 'J_hat', 'csr'])
 
 	# Option to Plot
 	if(plot):
@@ -354,8 +514,8 @@ def J_hat(PP: Type[Point_Process], r:np.ndarray, num_F_sampled_points:int=1000,
 		sbn.scatterplot(r, G, alpha=0.75, label='Observed G', ax=ax2)
 		
 		sbn.lineplot(r[:max_index], J_hat[:max_index], alpha=0.75,\
-                     label='Observed J', linewidth=1.0, ax=ax3)
-		plt.plot(r, np.ones(len(r)), c='k', label='Expected J', alpha=0.6)
+		             label='Observed J', linewidth=1.0, ax=ax3)
+		plt.plot(r, expected, c='k', label='Expected J', alpha=0.6)
 		plt.legend()
 
 		plt.xlabel('r')
@@ -365,7 +525,7 @@ def J_hat(PP: Type[Point_Process], r:np.ndarray, num_F_sampled_points:int=1000,
 		fig.tight_layout()
 		plt.show()
 
-	return np.concatenate((J_hat, nan_buffer))
+	return df
 
 
 def mean_min_neighbour_dist(PP: Type[Point_Process])-> float:
@@ -454,54 +614,52 @@ def CSR_hypothesis_test_dmin(observed_PP, significance_level:float, n_sim:int=50
 
 	return
 
-def simulate_summary_statistic(PP: Type[Point_Process], r:np.ndarray, summary_func:object,
-                               n_sims:int=100, plot:bool=False)->tuple:
 
-	"""Compares metrics between a given point process, and an average of n_sims homogenous 
-	poisson point processes. Returns the max and mean difference between the two. 
+def simulate_summary_statistic(PP: Type[Point_Process], r:np.ndarray, summary_func:object,
+                               n_sims:int=100, plot:bool=False)->pd.DataFrame:
+
+	"""Compares metrics between a given point process, and n_sims homogenous 
+	poisson point processes. 
 
 	Args:
 		PP: a point process object
 		r: an np array of input values
-		summary_func: a defined point process functions
-        plot: default False, True to see plots of metric compared to metric for poisson with
-			min and max envelopes for n_sims iterations
+		summary_func: a defined point process function (e.g. F_hat, G_hat, K_hat,
+		              K_hat_fast)
+		plot: default False, True to see plots of metric compared to metric for poisson with
+			min and max envelopes of n_sims simulations.
 	Returns: 
-		tuple of (mean difference, max difference)"""
+		pd.DataFrame with columns ['r', 'summary_func', 'min', 'max', 'mean']"""
 
-
+	name = summary_func.__name__
+	if name == 'K_hat_fast':
+		vals_column = 'K_hat' 
+	elif name == 'L_hat_fast':
+		vals_column = 'L_hat'
+	else:
+		vals_column = name
 
 	func_stack=[]
 	intensity=PP.homo_intensity_estimate()
 	for i in range(0, n_sims):
 		sim=hom_poisspp(intensity, PP.window)
-		func_stack.append(summary_func(sim, r))
+		func_stack.append(summary_func(sim, r)[vals_column].to_numpy())
 		b = "Loading{" + "#"*round(i*10/n_sims)+'{}%'.format(round(i*10/n_sims)*10) + "}"
 		print (b, end="\r")
 
 	func_mean = np.mean(func_stack, axis=0)
 	func_max = np.max(func_stack, axis=0)
 	func_min = np.min(func_stack, axis=0)
-	observed = summary_func(PP, r)
-    
+	observed = summary_func(PP, r)[vals_column].to_numpy()
+
 	if(plot):
-		plt.plot(r, func_mean, c='k', label='Mean ' + summary_func.__name__[0] + '(r) CSR Simulation', alpha=0.9)
-		sbn.scatterplot(r, observed, label='Observed '+ summary_func.__name__[0] + '(r)', s=25.0)
+		plt.plot(r, func_mean, c='k', label='Mean ' + name[0] + '(r) CSR Simulation', alpha=0.9)
+		sbn.scatterplot(r, observed, label='Observed '+ name[0] + '(r)', s=25.0)
 		plt.fill_between(r, func_min, func_max, alpha=0.3, label='Max/Min Envelope')
 		plt.xlabel('r')
-		plt.ylabel(summary_func.__name__[0] + '(r)')
+		plt.ylabel(name[0] + '(r)')
 		plt.legend()
 		plt.show()
-    
-	max_diff=0
-	mean_diff=0
-	for i in range(0, len(r)):
-		diff=abs(observed[i]-func_mean[i])
-		if(diff>max_diff):
-			max_diff=diff
 
-		mean_diff+=diff
-		
-	mean_diff=mean_diff/len(r)
-		
-	return(mean_diff, max_diff)
+	return pd.DataFrame(data=np.column_stack((r, observed, func_min, func_max, func_mean)),\
+	                    columns=['r', 'observed', 'min', 'max', 'mean'])

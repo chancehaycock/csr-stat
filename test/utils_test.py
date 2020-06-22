@@ -89,7 +89,7 @@ def test_G(pysal_pp, native_pp):
 
 	G_pysal = G(pysal_pp, intervals=100)
 	domain = G_pysal.d
-	G_native = G_hat(native_pp, domain, plot=False)
+	G_native = G_hat(native_pp, domain, plot=False).G_hat.to_numpy()
 
 	pysal_array = G_pysal.G
 	native_array = G_native
