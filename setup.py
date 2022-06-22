@@ -23,7 +23,7 @@ setuptools.setup(name='csrstat',
     python_requires='>=3.7',
     install_requires=[
       'pointpats==2.1.0',
-      'numpy==1.18.4',                                                                   
+      'numpy==1.22.0',                                                                   
       'scipy==1.4.1',                                                                    
       'matplotlib==3.2.1',                                                               
       'pytest==5.4.3',                                                                   
